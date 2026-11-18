@@ -1,0 +1,176 @@
+# COLLEGE PRACTICALS 1-10 (your college's own code, condensed, core lines marked)
+# CORE  = the lines that carry the marks. Learn these first.
+# EXTRA = prints and plots. Quick to write, skip if you run out of time.
+# Run one section at a time in Colab / Jupyter.
+
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use("Agg")            # remove this line in Colab so plots show
+import matplotlib.pyplot as plt
+
+# =================== PRACTICAL 1: NumPy, Pandas, exploration ===================
+arr = np.array([10, 20, 30, 40, 50])                     # CORE
+print(arr.shape, arr.ndim, arr.size, arr.dtype)          # EXTRA
+print(np.sum(arr), np.mean(arr), np.max(arr), np.min(arr), np.std(arr))
+matrix = np.array([[1,2,3],[4,5,6],[7,8,9]])             # CORE
+print(matrix.T, matrix.sum(), matrix.mean())             # transpose, sum, mean
+marks = pd.Series([85, 90, 78, 92, 88])                  # CORE
+data = {"Name": ["Rahul","Priya","Amit","Sneha","Karan"],
+        "Age": [20,21,20,22,21],
+        "Marks": [85,92,78,95,88],
+        "City": ["Pune","Mumbai","Nashik","Nagpur","Aurangabad"]}
+df = pd.DataFrame(data)                                  # CORE
+df.info(); print(df.head()); print(df.tail())            # CORE: explore
+print(df.shape, df.columns); print(df.describe())
+print(df.isnull().sum()); print(df.nunique()); print(df.dtypes)
+print(df["Marks"])                                       # one column
+print(df[["Name", "Marks"]])                             # many columns
+print(df[df["Marks"] > 80])                              # filter
+print(df[(df["Marks"] > 80) & (df["Age"] == 21)])        # filter, 2 conditions
+print(df.sort_values(by="Marks", ascending=False))       # sort
+df["Result"] = "Pass"                                    # add column
+df["Grade"] = ["B", "A", "C", "A+", "A"]
+df.loc[df["Marks"] < 80, "Result"] = "Needs Improvement" # update (cell 25)
+print("Average Marks =", df["Marks"].mean())
+print("Max =", df["Marks"].max(), "Min =", df["Marks"].min())
+print(df["City"].value_counts())
+df.to_csv("student_dataset.csv", index=False)            # save
+student_data = pd.read_csv("student_dataset.csv")        # load
+print(student_data)
+
+# =================== PRACTICAL 2: Cleaning + visualization ===================
+data = {"Name": ["John","Alice","Bob","David","Emma","John"],
+        "Age": [25, np.nan, 30, 22, 29, 25],
+        "Salary": [50000, 60000, np.nan, 45000, 70000, 50000],
+        "Department": ["HR","IT","Finance","HR",np.nan,"HR"]}
+df = pd.DataFrame(data)
+print(df.isnull().sum())                                 # CORE: count missing
+df["Age"] = df["Age"].fillna(df["Age"].mean())           # CORE: fill numeric
+df["Salary"] = df["Salary"].fillna(df["Salary"].mean())
+df["Department"] = df["Department"].fillna("Unknown")    # CORE: fill text
+df = df.drop_duplicates()                                # CORE: remove duplicates
+print(df); print(df.dtypes)
+df.groupby("Department")["Salary"].mean().plot(kind="bar", color="skyblue")  # bar
+plt.title("Average Salary by Department"); plt.xlabel("Department"); plt.ylabel("Average Salary"); plt.show()
+plt.hist(df["Age"], bins=5, color="green", edgecolor="black")                # histogram
+plt.title("Age Distribution"); plt.show()
+dc = df["Department"].value_counts()
+plt.pie(dc, labels=dc.index, autopct="%1.1f%%", startangle=90)               # pie
+plt.title("Department Distribution"); plt.show()
+plt.scatter(df["Age"], df["Salary"], color="red"); plt.grid(True); plt.show()  # scatter
+plt.plot(df["Name"], df["Salary"], marker="o", linewidth=2); plt.show()        # line
+
+# =================== PRACTICAL 3: Simple linear regression ===================
+from sklearn.linear_model import LinearRegression
+df = pd.DataFrame({"Study_Hours": [1,2,3,4,5,6,7,8],
+                   "Marks": [30,35,45,50,60,65,75,80]})
+X = df[["Study_Hours"]]                                  # CORE: X is 2D (double brackets)
+Y = df["Marks"]                                          # CORE: Y is 1D
+model = LinearRegression()                               # CORE
+model.fit(X, Y)                                          # CORE
+predicted_marks = model.predict(X)                       # CORE
+print("Slope:", model.coef_[0], "Intercept:", model.intercept_)
+print("Predicted:", predicted_marks)
+print("9 hours:", model.predict(pd.DataFrame({"Study_Hours": [9]}))[0])
+plt.scatter(df["Study_Hours"], Y, color="blue", label="Actual Data")      # EXTRA: plot (use df["col"], not X)
+plt.plot(df["Study_Hours"], predicted_marks, color="red", label="Regression Line")
+plt.legend(); plt.show()
+
+# =================== PRACTICAL 4: Multiple linear regression ===================
+df = pd.DataFrame({"Study_Hours": [2,3,4,5,6,7,8,9],
+                   "Attendance": [60,65,70,75,80,85,90,95],
+                   "Marks": [35,42,48,55,63,70,78,85]})
+X = df[["Study_Hours", "Attendance"]]                    # CORE: 2+ features
+Y = df["Marks"]
+model = LinearRegression()
+model.fit(X, Y)
+predicted_marks = model.predict(X)
+print("Coefficients:", model.coef_, "Intercept:", model.intercept_)
+print("Predicted:", predicted_marks)
+print("New student:", model.predict(pd.DataFrame([[10, 96]], columns=X.columns))[0])
+
+# =================== PRACTICAL 5: KNN classification ===================
+from sklearn.neighbors import KNeighborsClassifier
+df = pd.DataFrame({"Study_Hours": [1,2,3,4,5,6,7,8],
+                   "Attendance": [55,60,65,70,75,80,85,90],
+                   "Result": ["Fail","Fail","Fail","Pass","Pass","Pass","Pass","Pass"]})
+X = df[["Study_Hours", "Attendance"]]
+Y = df["Result"]
+model = KNeighborsClassifier(n_neighbors=3)              # CORE: k = 3 neighbours
+model.fit(X, Y)                                          # CORE
+prediction = model.predict(pd.DataFrame([[5, 78]], columns=X.columns))   # CORE
+print("Prediction for 5 hours, 78% attendance:", prediction[0])
+
+# =================== PRACTICAL 6: Decision tree + evaluation ===================
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.metrics import confusion_matrix, classification_report
+df = pd.DataFrame({"Study_Hours": [1,2,3,4,5,6,7,8],
+                   "Attendance": [55,60,65,70,75,80,85,90],
+                   "Result": ["Fail","Fail","Fail","Pass","Pass","Pass","Pass","Pass"]})
+X = df[["Study_Hours", "Attendance"]]
+Y = df["Result"]
+model = DecisionTreeClassifier(random_state=42)          # CORE
+model.fit(X, Y)                                          # CORE
+predicted = model.predict(X)                             # CORE
+print(confusion_matrix(Y, predicted))                    # CORE
+print(classification_report(Y, predicted))               # CORE
+
+# =================== PRACTICAL 7: K-Means ===================
+from sklearn.cluster import KMeans
+df = pd.DataFrame({"Age": [22,25,23,45,46,48,30,32],
+                   "Income": [25000,28000,26000,65000,68000,70000,40000,42000]})
+kmeans = KMeans(n_clusters=2, random_state=42)           # CORE
+kmeans.fit(df)                                           # CORE
+df["Cluster"] = kmeans.labels_                           # CORE
+print(df); print(kmeans.cluster_centers_)
+
+# =================== PRACTICAL 8: Hierarchical clustering + PCA ===================
+from sklearn.cluster import AgglomerativeClustering
+from sklearn.decomposition import PCA
+df = pd.DataFrame({"Age": [22,25,23,45,46,48,30,32],
+                   "Income": [25000,28000,26000,65000,68000,70000,40000,42000]})
+hc = AgglomerativeClustering(n_clusters=2)               # CORE
+df["Cluster"] = hc.fit_predict(df)                       # CORE
+print(df)
+pca = PCA(n_components=1)                                # CORE
+pc = pca.fit_transform(df[["Age", "Income"]])            # CORE
+print(pc.ravel()); print(pca.explained_variance_ratio_)
+
+# =================== PRACTICAL 9: Random forest, disease prediction ===================
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.metrics import accuracy_score
+df = pd.DataFrame({"Age": [25,30,35,40,45,50,55,60],
+                   "BP": [120,130,125,140,145,150,155,160],
+                   "Sugar": [90,95,100,110,120,130,140,150],
+                   "Disease": ["No","No","No","Yes","Yes","Yes","Yes","Yes"]})
+X = df[["Age", "BP", "Sugar"]]
+Y = df["Disease"]
+model = RandomForestClassifier(n_estimators=100, random_state=42)   # CORE
+model.fit(X, Y)                                                      # CORE
+predicted = model.predict(X)                                         # CORE
+print(accuracy_score(Y, predicted))                                  # CORE
+print(classification_report(Y, predicted))
+print("New patient:", model.predict(pd.DataFrame([[42,138,115]], columns=X.columns))[0])
+
+# =================== PRACTICAL 10: ML pipeline ===================
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import StandardScaler
+df = pd.DataFrame({"Study_Hours": [2,3,4,5,6,7,8,9,5,6],
+                   "Attendance": [60,65,70,75,80,85,90,95,72,88],
+                   "Assignments": [1,2,2,3,3,4,4,5,3,4],
+                   "Result": ["Fail","Fail","Fail","Pass","Pass",
+                              "Pass","Pass","Pass","Fail","Pass"]})
+X = df[["Study_Hours", "Attendance", "Assignments"]]
+Y = df["Result"]
+X_train, X_test, Y_train, Y_test = train_test_split(
+    X, Y, test_size=0.2, random_state=42)                            # CORE
+pipeline = Pipeline([("scaler", StandardScaler()),                   # CORE
+                     ("classifier", RandomForestClassifier(n_estimators=100, random_state=42))])
+pipeline.fit(X_train, Y_train)                                       # CORE
+predicted = pipeline.predict(X_test)                                 # CORE
+print(list(Y_test), list(predicted))
+print("Accuracy:", accuracy_score(Y_test, predicted))
+print(classification_report(Y_test, predicted))
+print("New student:", pipeline.predict(pd.DataFrame([[6,82,3]], columns=X.columns))[0])
